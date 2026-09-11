@@ -1,0 +1,57 @@
+# Ignore files for build tool Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.properties
+
+# Eclipse m2e generated files
+.metadata
+.classpath
+.project
+.settings/
+*.jars
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Intellij Idea (including Gradle and Maven projects)
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+
+# Linux
+.directory
+
+# SonarQube
+.sonarqube/
+
+# Application logs
+*.log
+logs/
+
+# Environment variables
+.env
+.env.local
+application-prod.properties
+application-prod.yml
+
+# OS temp files
+*~
+*.swp
+*.swo

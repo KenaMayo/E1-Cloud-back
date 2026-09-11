@@ -1,0 +1,109 @@
+version: '3.9'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: tienda-postgres
+    environment:
+      POSTGRES_DB: tienda_perritos
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - tienda-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ms-productos Microservice
+  ms-productos:
+    build:
+      context: ./tienda-perritos-ms-productos
+      dockerfile: Dockerfile
+    container_name: ms-productos
+    ports:
+      - "8081:8081"
+    environment:
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: tienda_perritos
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: postgres
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://login.microsoftonline.com/common/v2.0
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://login.microsoftonline.com/common/discovery/v2.0/keys
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - tienda-network
+
+  # ms-usuarios Microservice
+  ms-usuarios:
+    build:
+      context: ./tienda-perritos-ms-usuarios
+      dockerfile: Dockerfile
+    container_name: ms-usuarios
+    ports:
+      - "8082:8082"
+    environment:
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: tienda_perritos
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: postgres
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://login.microsoftonline.com/common/v2.0
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://login.microsoftonline.com/common/discovery/v2.0/keys
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - tienda-network
+
+  # BFF - Backend for Frontend
+  bff:
+    build:
+      context: ./tienda-perritos-bff
+      dockerfile: Dockerfile
+    container_name: bff
+    ports:
+      - "8080:8080"
+    environment:
+      MS_PRODUCTOS_URL: http://ms-productos:8081/api/v1
+      MS_USUARIOS_URL: http://ms-usuarios:8082/api/v1
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://login.microsoftonline.com/common/v2.0
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://login.microsoftonline.com/common/discovery/v2.0/keys
+    depends_on:
+      - ms-productos
+      - ms-usuarios
+    networks:
+      - tienda-network
+
+  # Frontend - Angular Application
+  frontend:
+    build:
+      context: ./tienda-perritos-angular
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "80:80"
+    environment:
+      API_URL: http://localhost:8080/api/v1
+      MSAL_CLIENT_ID: ${MSAL_CLIENT_ID}
+      MSAL_TENANT_ID: ${MSAL_TENANT_ID}
+    depends_on:
+      - bff
+    networks:
+      - tienda-network
+
+volumes:
+  postgres_data:
+
+networks:
+  tienda-network:
+    driver: bridge

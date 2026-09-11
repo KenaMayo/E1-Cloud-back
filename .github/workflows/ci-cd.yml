@@ -1,0 +1,188 @@
+name: Build and Deploy - Tienda de Perritos
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+  IMAGE_PREFIX: tienda-perritos
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: Test Backend Services
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: tienda_perritos
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Test ms-productos
+        working-directory: ./tienda-perritos-ms-productos
+        run: mvn clean test
+
+      - name: Test ms-usuarios
+        working-directory: ./tienda-perritos-ms-usuarios
+        run: mvn clean test
+
+      - name: Test BFF
+        working-directory: ./tienda-perritos-bff
+        run: mvn clean test
+
+  build-backend:
+    needs: test
+    runs-on: ubuntu-latest
+    name: Build & Push Backend Images
+    if: github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Build & Push ms-productos
+        uses: docker/build-push-action@v5
+        with:
+          context: ./tienda-perritos-ms-productos
+          push: true
+          tags: ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_PREFIX }}-productos:${{ github.sha }},${{ env.ECR_REGISTRY }}/${{ env.IMAGE_PREFIX }}-productos:latest
+
+      - name: Build & Push ms-usuarios
+        uses: docker/build-push-action@v5
+        with:
+          context: ./tienda-perritos-ms-usuarios
+          push: true
+          tags: ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_PREFIX }}-usuarios:${{ github.sha }},${{ env.ECR_REGISTRY }}/${{ env.IMAGE_PREFIX }}-usuarios:latest
+
+      - name: Build & Push BFF
+        uses: docker/build-push-action@v5
+        with:
+          context: ./tienda-perritos-bff
+          push: true
+          tags: ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_PREFIX }}-bff:${{ github.sha }},${{ env.ECR_REGISTRY }}/${{ env.IMAGE_PREFIX }}-bff:latest
+
+  build-frontend:
+    runs-on: ubuntu-latest
+    name: Build & Push Frontend Image
+    if: github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: tienda-perritos-angular/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./tienda-perritos-angular
+        run: npm ci
+
+      - name: Build Angular app
+        working-directory: ./tienda-perritos-angular
+        run: npm run build:prod
+        env:
+          NG_BUILD_OPTIMIZATION: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Build & Push frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./tienda-perritos-angular
+          push: true
+          tags: ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_PREFIX }}-frontend:${{ github.sha }},${{ env.ECR_REGISTRY }}/${{ env.IMAGE_PREFIX }}-frontend:latest
+
+  deploy-dev:
+    needs: [build-backend, build-frontend]
+    runs-on: ubuntu-latest
+    name: Deploy to Development
+    if: github.ref == 'refs/heads/develop'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy to ECS (Dev)
+        run: |
+          aws ecs update-service \
+            --cluster tienda-perritos-dev \
+            --service tienda-perritos-app \
+            --force-new-deployment
+
+  deploy-prod:
+    needs: [build-backend, build-frontend]
+    runs-on: ubuntu-latest
+    name: Deploy to Production
+    if: github.ref == 'refs/heads/main'
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy to ECS (Prod)
+        run: |
+          aws ecs update-service \
+            --cluster tienda-perritos-prod \
+            --service tienda-perritos-app \
+            --force-new-deployment
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_DIST_ID }} \
+            --paths "/*"

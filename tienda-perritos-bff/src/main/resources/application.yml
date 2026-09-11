@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: bff
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI:https://login.microsoftonline.com/common/v2.0}
+          jwk-set-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI:https://login.microsoftonline.com/common/discovery/v2.0/keys}
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api/v1
+
+microservices:
+  productos:
+    url: ${MS_PRODUCTOS_URL:http://localhost:8081/api/v1}
+  usuarios:
+    url: ${MS_USUARIOS_URL:http://localhost:8082/api/v1}
+
+logging:
+  level:
+    root: INFO
+    com.tienda: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized

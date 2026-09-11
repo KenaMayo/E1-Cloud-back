@@ -1,0 +1,57 @@
+version: "3.1"
+
+provider:
+  name: aws
+  runtime: java21
+  region: us-east-1
+  environment:
+    JAVA_TOOL_OPTIONS: "-XX:+TieredCompilation -XX:TieredStopAtLevel=1"
+
+service:
+  name: tienda-perritos
+
+functions:
+  msProductos:
+    handler: com.tienda.productos.MsProductosApplication
+    memorySize: 1024
+    timeout: 60
+    events:
+      - http:
+          path: api/v1/productos
+          method: ANY
+          cors: true
+    environment:
+      DATABASE_HOST: ${ssm:/tienda-perritos/db-host}
+      DATABASE_PORT: ${ssm:/tienda-perritos/db-port}
+      DATABASE_NAME: ${ssm:/tienda-perritos/db-name}
+      DATABASE_USER: ${ssm:/tienda-perritos/db-user}
+      DATABASE_PASSWORD: ${ssm:/tienda-perritos/db-password}
+
+  msUsuarios:
+    handler: com.tienda.usuarios.MsUsuariosApplication
+    memorySize: 1024
+    timeout: 60
+    events:
+      - http:
+          path: api/v1/usuarios
+          method: ANY
+          cors: true
+    environment:
+      DATABASE_HOST: ${ssm:/tienda-perritos/db-host}
+      DATABASE_PORT: ${ssm:/tienda-perritos/db-port}
+      DATABASE_NAME: ${tienda-perritos/db-name}
+      DATABASE_USER: ${ssm:/tienda-perritos/db-user}
+      DATABASE_PASSWORD: ${ssm:/tienda-perritos/db-password}
+
+  bff:
+    handler: com.tienda.bff.BffApplication
+    memorySize: 1024
+    timeout: 60
+    events:
+      - http:
+          path: api/v1/{proxy+}
+          method: ANY
+          cors: true
+    environment:
+      MS_PRODUCTOS_URL: ${aws:apigateway:${self:service}-msProductos}
+      MS_USUARIOS_URL: ${aws:apigateway:${self:service}-msUsuarios}
