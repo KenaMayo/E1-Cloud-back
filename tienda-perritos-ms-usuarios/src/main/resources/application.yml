@@ -39,3 +39,13 @@ management:
   endpoint:
     health:
       show-details: when-authorized
+
+
+spring:
+  cloud:
+    azure:
+      active-directory:
+        enabled: true
+        credential:
+          client-id: "ID"
+        app-id-uri: "api://URI" # O la URI que hayas configurado en Azure
