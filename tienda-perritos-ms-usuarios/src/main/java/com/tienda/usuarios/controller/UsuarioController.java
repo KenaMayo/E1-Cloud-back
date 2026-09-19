@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,10 +23,15 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
 
+    private String emailDe(Authentication authentication) {
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        return jwt.getClaimAsString("preferred_username");
+    }
+
     @GetMapping("/me")
     public ResponseEntity<UsuarioDto> obtenerUsuarioActual(Authentication authentication) {
         log.info("Obteniendo usuario actual");
-        String email = authentication.getName();
+        String email = emailDe(authentication);
         UsuarioDto usuario = usuarioService.obtenerPorEmail(email);
         return ResponseEntity.ok(usuario);
     }
@@ -35,7 +41,7 @@ public class UsuarioController {
             Authentication authentication,
             @Valid @RequestBody CreateUsuarioRequest request) {
         log.info("Actualizar usuario actual");
-        String email = authentication.getName();
+        String email = emailDe(authentication);
         UsuarioDto usuarioActual = usuarioService.obtenerPorEmail(email);
         UsuarioDto usuario = usuarioService.actualizar(
                 usuarioActual.getId(),

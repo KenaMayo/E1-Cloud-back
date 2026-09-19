@@ -24,9 +24,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
+            String authHeader = request.getHeader("Authorization");
+            log.info("DEBUG-TEMP Authorization header recibido: [{}] longitud={}", authHeader, authHeader == null ? -1 : authHeader.length());
+
             if (auth != null && auth.isAuthenticated()) {
                 log.debug("JWT Token validado para usuario: {}", auth.getName());
                 log.debug("Authorities: {}", auth.getAuthorities());
+            } else {
+                log.info("DEBUG-TEMP No autenticado. auth={}", auth);
             }
 
         } catch (Exception e) {
