@@ -30,13 +30,14 @@ services:
     ports:
       - "8081:8081"
     environment:
+      JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       DATABASE_HOST: postgres
       DATABASE_PORT: 5432
       DATABASE_NAME: tienda_perritos
       DATABASE_USER: postgres
       DATABASE_PASSWORD: postgres
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://login.microsoftonline.com/common/v2.0
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://login.microsoftonline.com/common/discovery/v2.0/keys
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://login.microsoftonline.com/fc80740a-8501-4d9b-a246-8fbbd7ac5140/v2.0
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://login.microsoftonline.com/fc80740a-8501-4d9b-a246-8fbbd7ac5140/discovery/v2.0/keys
     depends_on:
       postgres:
         condition: service_healthy
@@ -52,13 +53,14 @@ services:
     ports:
       - "8082:8082"
     environment:
+      JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       DATABASE_HOST: postgres
       DATABASE_PORT: 5432
       DATABASE_NAME: tienda_perritos
       DATABASE_USER: postgres
       DATABASE_PASSWORD: postgres
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://login.microsoftonline.com/common/v2.0
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://login.microsoftonline.com/common/discovery/v2.0/keys
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://login.microsoftonline.com/fc80740a-8501-4d9b-a246-8fbbd7ac5140/v2.0
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://login.microsoftonline.com/fc80740a-8501-4d9b-a246-8fbbd7ac5140/discovery/v2.0/keys
     depends_on:
       postgres:
         condition: service_healthy
@@ -74,10 +76,12 @@ services:
     ports:
       - "8080:8080"
     environment:
+      JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       MS_PRODUCTOS_URL: http://ms-productos:8081/api/v1
       MS_USUARIOS_URL: http://ms-usuarios:8082/api/v1
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://login.microsoftonline.com/common/v2.0
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://login.microsoftonline.com/common/discovery/v2.0/keys
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://login.microsoftonline.com/fc80740a-8501-4d9b-a246-8fbbd7ac5140/v2.0
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://login.microsoftonline.com/fc80740a-8501-4d9b-a246-8fbbd7ac5140/discovery/v2.0/keys
+      AZURE_AD_AUDIENCE: api://db0c2b5d-d0b6-4b59-84b1-4ff4bb15f34d
     depends_on:
       - ms-productos
       - ms-usuarios

@@ -20,6 +20,13 @@ spring:
         jwt:
           issuer-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI:https://login.microsoftonline.com/common/v2.0}
           jwk-set-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI:https://login.microsoftonline.com/common/discovery/v2.0/keys}
+  cloud:
+    azure:
+      active-directory:
+        enabled: true
+        credential:
+          client-id: "ID"
+        app-id-uri: "api://URI" # O la URI que hayas configurado en Azure
 
 server:
   port: 8082
@@ -39,13 +46,3 @@ management:
   endpoint:
     health:
       show-details: when-authorized
-
-
-spring:
-  cloud:
-    azure:
-      active-directory:
-        enabled: true
-        credential:
-          client-id: "ID"
-        app-id-uri: "api://URI" # O la URI que hayas configurado en Azure
