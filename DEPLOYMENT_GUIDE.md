@@ -113,7 +113,7 @@ docker-compose.yml
 
 Create `.env` file in project root:
 
-```env
+```envñ
 # OAuth2 Configuration
 MSAL_CLIENT_ID=<your-client-id>
 MSAL_TENANT_ID=<your-tenant-id>
