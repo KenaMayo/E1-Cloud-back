@@ -40,7 +40,8 @@ public class ProductosController {
             @PathVariable Long id,
             Authentication authentication) {
         log.info("Obteniendo producto con ID: {}", id);
-        String token = authentication.getCredentials().toString();
+       Jwt jwt = (Jwt) authentication.getPrincipal();
+        String token = jwt.getTokenValue();
 
         return productosClient.obtenerProducto(id, token)
                 .map(ResponseEntity::ok)
@@ -53,7 +54,8 @@ public class ProductosController {
             @RequestBody ProductoDto producto,
             Authentication authentication) {
         log.info("Crear nuevo producto");
-        String token = authentication.getCredentials().toString();
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String token = jwt.getTokenValue();
 
         return productosClient.crearProducto(producto, token)
                 .map(p -> ResponseEntity.status(HttpStatus.CREATED).body(p))
@@ -67,7 +69,8 @@ public class ProductosController {
             @RequestBody ProductoDto producto,
             Authentication authentication) {
         log.info("Actualizar producto con ID: {}", id);
-        String token = authentication.getCredentials().toString();
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String token = jwt.getTokenValue();
 
         return productosClient.actualizarProducto(id, producto, token)
                 .map(ResponseEntity::ok)
@@ -80,7 +83,8 @@ public class ProductosController {
             @PathVariable Long id,
             Authentication authentication) {
         log.info("Eliminar producto con ID: {}", id);
-        String token = authentication.getCredentials().toString();
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String token = jwt.getTokenValue();
 
         return productosClient.eliminarProducto(id, token)
                 .then(Mono.just(ResponseEntity.noContent().<Void>build()))

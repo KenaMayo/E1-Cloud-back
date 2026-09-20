@@ -39,7 +39,8 @@ public class UsuariosController {
             @RequestBody UsuarioDto usuario,
             Authentication authentication) {
         log.info("Actualizar usuario actual");
-        String token = authentication.getCredentials().toString();
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String token = jwt.getTokenValue();
 
         return usuariosClient.actualizarUsuarioActual(usuario, token)
                 .map(ResponseEntity::ok)
@@ -50,7 +51,8 @@ public class UsuariosController {
     @GetMapping
     public ResponseEntity<List<UsuarioDto>> obtenerTodos(Authentication authentication) {
         log.info("Obteniendo todos los usuarios");
-        String token = authentication.getCredentials().toString();
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String token = jwt.getTokenValue();
 
         List<UsuarioDto> usuarios = usuariosClient.obtenerTodosUsuarios(token)
                 .collectList()
@@ -64,7 +66,8 @@ public class UsuariosController {
             @PathVariable Long id,
             Authentication authentication) {
         log.info("Obteniendo usuario con ID: {}", id);
-        String token = authentication.getCredentials().toString();
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String token = jwt.getTokenValue();
 
         return usuariosClient.obtenerUsuario(id, token)
                 .map(ResponseEntity::ok)
@@ -77,7 +80,8 @@ public class UsuariosController {
             @RequestBody UsuarioDto usuario,
             Authentication authentication) {
         log.info("Crear nuevo usuario");
-        String token = authentication.getCredentials().toString();
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String token = jwt.getTokenValue();
 
         return usuariosClient.crearUsuario(usuario, token)
                 .map(u -> ResponseEntity.status(HttpStatus.CREATED).body(u))
@@ -91,7 +95,8 @@ public class UsuariosController {
             @RequestBody UsuarioDto usuario,
             Authentication authentication) {
         log.info("Actualizar usuario con ID: {}", id);
-        String token = authentication.getCredentials().toString();
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String token = jwt.getTokenValue();
 
         return usuariosClient.actualizarUsuario(id, usuario, token)
                 .map(ResponseEntity::ok)
@@ -104,7 +109,8 @@ public class UsuariosController {
             @PathVariable Long id,
             Authentication authentication) {
         log.info("Eliminar usuario con ID: {}", id);
-        String token = authentication.getCredentials().toString();
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String token = jwt.getTokenValue();
 
         return usuariosClient.eliminarUsuario(id, token)
                 .then(Mono.just(ResponseEntity.noContent().<Void>build()))
