@@ -18,8 +18,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI:https://login.microsoftonline.com/common/v2.0}
-          jwk-set-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI:https://login.microsoftonline.com/common/discovery/v2.0/keys}
+          issuer-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI:https://login.microsoftonline.com/fc80740a-8501-4d9b-a246-8fbbd7ac5140/v2.0}
+          jwk-set-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI:https://login.microsoftonline.com/fc80740a-8501-4d9b-a246-8fbbd7ac5140/discovery/v2.0/keys}
   cloud:
     azure:
       active-directory:
@@ -27,6 +27,10 @@ spring:
         credential:
           client-id: ${AZURE_AD_CLIENT_ID:db0c2b5d-d0b6-4b59-84b1-4ff4bb15f34d}
         app-id-uri: ${AZURE_AD_APP_ID_URI:api://db0c2b5d-d0b6-4b59-84b1-4ff4bb15f34d}
+
+azure:
+  ad:
+    audience: ${AZURE_AD_AUDIENCE:db0c2b5d-d0b6-4b59-84b1-4ff4bb15f34d}
 
 server:
   port: 8081

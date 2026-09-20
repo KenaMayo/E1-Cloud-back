@@ -4,12 +4,11 @@ import com.tienda.bff.client.ProductosClient;
 import com.tienda.bff.dto.ProductoDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
-import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.util.List;
 
@@ -23,12 +22,11 @@ public class ProductosController {
     private final ProductosClient productosClient;
 
     @GetMapping
-    public ResponseEntity<List<ProductoDto>> obtenerTodos(Authentication authentication) {
+        public ResponseEntity<List<ProductoDto>> obtenerTodos(
+                        @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
         log.info("Obteniendo todos los productos");
-        Jwt jwt = (Jwt) authentication.getPrincipal();
-        String token = jwt.getTokenValue();
 
-        List<ProductoDto> productos = productosClient.obtenerTodosProductos(token)
+                List<ProductoDto> productos = productosClient.obtenerTodosProductos(authorizationHeader)
                 .collectList()
                 .block();
 
@@ -38,12 +36,10 @@ public class ProductosController {
     @GetMapping("/{id}")
     public ResponseEntity<ProductoDto> obtenerPorId(
             @PathVariable Long id,
-            Authentication authentication) {
+                        @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
         log.info("Obteniendo producto con ID: {}", id);
-       Jwt jwt = (Jwt) authentication.getPrincipal();
-        String token = jwt.getTokenValue();
 
-        return productosClient.obtenerProducto(id, token)
+                return productosClient.obtenerProducto(id, authorizationHeader)
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build())
                 .block();
@@ -52,12 +48,10 @@ public class ProductosController {
     @PostMapping
     public ResponseEntity<ProductoDto> crear(
             @RequestBody ProductoDto producto,
-            Authentication authentication) {
+                        @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
         log.info("Crear nuevo producto");
-        Jwt jwt = (Jwt) authentication.getPrincipal();
-        String token = jwt.getTokenValue();
 
-        return productosClient.crearProducto(producto, token)
+                return productosClient.crearProducto(producto, authorizationHeader)
                 .map(p -> ResponseEntity.status(HttpStatus.CREATED).body(p))
                 .defaultIfEmpty(ResponseEntity.badRequest().build())
                 .block();
@@ -67,12 +61,10 @@ public class ProductosController {
     public ResponseEntity<ProductoDto> actualizar(
             @PathVariable Long id,
             @RequestBody ProductoDto producto,
-            Authentication authentication) {
+                        @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
         log.info("Actualizar producto con ID: {}", id);
-        Jwt jwt = (Jwt) authentication.getPrincipal();
-        String token = jwt.getTokenValue();
 
-        return productosClient.actualizarProducto(id, producto, token)
+                return productosClient.actualizarProducto(id, producto, authorizationHeader)
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build())
                 .block();
@@ -81,12 +73,10 @@ public class ProductosController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(
             @PathVariable Long id,
-            Authentication authentication) {
+                        @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
         log.info("Eliminar producto con ID: {}", id);
-        Jwt jwt = (Jwt) authentication.getPrincipal();
-        String token = jwt.getTokenValue();
 
-        return productosClient.eliminarProducto(id, token)
+                return productosClient.eliminarProducto(id, authorizationHeader)
                 .then(Mono.just(ResponseEntity.noContent().<Void>build()))
                 .defaultIfEmpty(ResponseEntity.notFound().build())
                 .block();
