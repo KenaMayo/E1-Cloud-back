@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.util.List;
 
@@ -24,7 +25,8 @@ public class UsuariosController {
     @GetMapping("/me")
     public ResponseEntity<UsuarioDto> obtenerUsuarioActual(Authentication authentication) {
         log.info("Obteniendo usuario actual");
-        String token = authentication.getCredentials().toString();
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String token = jwt.getTokenValue();
 
         return usuariosClient.obtenerUsuarioActual(token)
                 .map(ResponseEntity::ok)

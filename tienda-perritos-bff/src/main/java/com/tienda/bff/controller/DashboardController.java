@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.util.List;
 
@@ -27,7 +28,8 @@ public class DashboardController {
     public ResponseEntity<?> obtenerDashboard(Authentication authentication) {
         log.info("Obteniendo datos del dashboard");
 
-        String token = authentication.getCredentials().toString();
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String token = jwt.getTokenValue();
 
         Mono<UsuarioDto> usuarioMono = usuariosClient.obtenerUsuarioActual(token);
 
