@@ -1,0 +1,28 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+secrets.local.env
+
+# Node
+node_modules/
+tienda-perritos-angular/dist/
+
+# Java / Maven
+target/
+*.jar
+!*/target/*.jar.original
+
+# IDE
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.backup
+terraform/.terraform.lock.hcl
