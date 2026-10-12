@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,7 +22,7 @@ public class AuthController {
     public ResponseEntity<?> obtenerUsuarioActual(Authentication authentication) {
         log.info("Obteniendo información del usuario autenticado");
 
-        String token = authentication.getCredentials().toString();
+        String token = ((Jwt) authentication.getPrincipal()).getTokenValue();
 
         return usuariosClient.obtenerUsuarioActual(token)
                 .map(ResponseEntity::ok)

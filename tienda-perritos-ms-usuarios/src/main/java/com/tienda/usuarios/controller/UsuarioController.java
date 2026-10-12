@@ -25,15 +25,28 @@ public class UsuarioController {
 
     private String emailDe(Authentication authentication) {
         Jwt jwt = (Jwt) authentication.getPrincipal();
-        return jwt.getClaimAsString("preferred_username");
+        String email = jwt.getClaimAsString("preferred_username");
+        return email != null ? email : jwt.getClaimAsString("email");
     }
 
     @GetMapping("/me")
     public ResponseEntity<UsuarioDto> obtenerUsuarioActual(Authentication authentication) {
         log.info("Obteniendo usuario actual");
+        Jwt jwt = (Jwt) authentication.getPrincipal();
         String email = emailDe(authentication);
-        UsuarioDto usuario = usuarioService.obtenerPorEmail(email);
-        return ResponseEntity.ok(usuario);
+        String nombreCompleto = jwt.getClaimAsString("name");
+        String[] partes = nombreCompleto == null ? new String[0] : nombreCompleto.trim().split("\\s+", 2);
+
+        String nombre = jwt.getClaimAsString("given_name");
+        if (nombre == null) {
+            nombre = partes.length > 0 ? partes[0] : email.split("@")[0];
+        }
+        String apellido = jwt.getClaimAsString("family_name");
+        if (apellido == null) {
+            apellido = partes.length > 1 ? partes[1] : "";
+        }
+
+        return ResponseEntity.ok(usuarioService.obtenerOCrear(email, nombre, apellido));
     }
 
     @PutMapping("/me")

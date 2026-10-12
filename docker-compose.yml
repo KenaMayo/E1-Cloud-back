@@ -1,5 +1,4 @@
 services:
-  # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
     container_name: tienda-postgres
@@ -7,19 +6,17 @@ services:
       POSTGRES_DB: ${DATABASE_NAME}
       POSTGRES_USER: ${DATABASE_USER}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - tienda-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
-  # ms-productos Microservice
   ms-productos:
     build:
       context: ./tienda-perritos-ms-productos
@@ -29,7 +26,6 @@ services:
       - "8081:8081"
     environment:
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
-      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: DEBUG
       DATABASE_HOST: postgres
       DATABASE_PORT: 5432
       DATABASE_NAME: ${DATABASE_NAME}
@@ -37,13 +33,20 @@ services:
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://login.microsoftonline.com/${MSAL_TENANT_ID}/v2.0
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://login.microsoftonline.com/${MSAL_TENANT_ID}/discovery/v2.0/keys
+      AZURE_AD_AUDIENCE: ${MSAL_CLIENT_ID}
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - tienda-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO /dev/null http://127.0.0.1:8081/api/v1/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 40s
+    restart: unless-stopped
 
-  # ms-usuarios Microservice
   ms-usuarios:
     build:
       context: ./tienda-perritos-ms-usuarios
@@ -53,7 +56,6 @@ services:
       - "8082:8082"
     environment:
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
-      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: DEBUG
       DATABASE_HOST: postgres
       DATABASE_PORT: 5432
       DATABASE_NAME: ${DATABASE_NAME}
@@ -61,13 +63,20 @@ services:
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://login.microsoftonline.com/${MSAL_TENANT_ID}/v2.0
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://login.microsoftonline.com/${MSAL_TENANT_ID}/discovery/v2.0/keys
+      AZURE_AD_AUDIENCE: ${MSAL_CLIENT_ID}
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - tienda-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO /dev/null http://127.0.0.1:8082/api/v1/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 40s
+    restart: unless-stopped
 
-  # BFF - Backend for Frontend
   bff:
     build:
       context: ./tienda-perritos-bff
@@ -83,27 +92,33 @@ services:
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://login.microsoftonline.com/${MSAL_TENANT_ID}/discovery/v2.0/keys
       AZURE_AD_AUDIENCE: ${MSAL_CLIENT_ID}
     depends_on:
-      - ms-productos
-      - ms-usuarios
+      ms-productos:
+        condition: service_healthy
+      ms-usuarios:
+        condition: service_healthy
     networks:
       - tienda-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO /dev/null http://127.0.0.1:8080/api/v1/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 40s
+    restart: unless-stopped
 
-  # Frontend - Angular Application
   frontend:
     build:
-      context: ./tienda-perritos-angular
+      context: ../E1-Cloud-front
       dockerfile: Dockerfile
     container_name: frontend
     ports:
       - "80:80"
-    environment:
-      API_URL: http://localhost:8080/api/v1
-      MSAL_CLIENT_ID: ${MSAL_CLIENT_ID}
-      MSAL_TENANT_ID: ${MSAL_TENANT_ID}
     depends_on:
-      - bff
+      bff:
+        condition: service_healthy
     networks:
       - tienda-network
+    restart: unless-stopped
 
 volumes:
   postgres_data:

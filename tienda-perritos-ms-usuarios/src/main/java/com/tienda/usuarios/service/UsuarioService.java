@@ -54,6 +54,16 @@ public class UsuarioService {
     }
 
     /**
+     * Obtiene un usuario por email o lo aprovisiona en el primer acceso
+     */
+    @Transactional
+    public UsuarioDto obtenerOCrear(String email, String nombre, String apellido) {
+        return usuarioRepository.findByEmail(email)
+                .map(this::toDto)
+                .orElseGet(() -> crear(email, nombre, apellido, null));
+    }
+
+    /**
      * Crea un nuevo usuario
      */
     @Transactional

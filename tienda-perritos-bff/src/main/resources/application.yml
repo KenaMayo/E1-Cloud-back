@@ -27,7 +27,7 @@ logging:
   level:
     root: INFO
     com.tienda: DEBUG
-    org.springframework.security: DEBUG
+    org.springframework.security: INFO
 
 management:
   endpoints:
