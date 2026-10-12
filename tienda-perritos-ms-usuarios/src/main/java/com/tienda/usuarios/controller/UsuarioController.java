@@ -18,7 +18,6 @@ import java.util.List;
 @RequestMapping("/usuarios")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = "*", maxAge = 3600)
 public class UsuarioController {
 
     private final UsuarioService usuarioService;

@@ -23,6 +23,9 @@ azure:
   ad:
     audience: ${AZURE_AD_AUDIENCE:db0c2b5d-d0b6-4b59-84b1-4ff4bb15f34d}
 
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost,http://localhost:4200}
+
 logging:
   level:
     root: INFO

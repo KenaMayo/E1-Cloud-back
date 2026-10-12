@@ -1,8 +1,10 @@
 package com.tienda.bff.config;
 
+import com.tienda.bff.security.UsuarioRolesConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -20,8 +22,7 @@ import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import io.netty.resolver.DefaultAddressResolverGroup;
 import reactor.netty.http.client.HttpClient;
 
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -33,18 +34,27 @@ public class SecurityConfig {
     @Value("${azure.ad.audience}")
     private String expectedAudience;
 
+    @Value("${cors.allowed-origins}")
+    private List<String> allowedOrigins;
+
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, UsuarioRolesConverter usuarioRolesConverter) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                        .requestMatchers("/actuator/**").permitAll()
+                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/productos", "/productos/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/productos", "/productos/**").hasRole("ADMIN")
+                        .requestMatchers("/usuarios/me").authenticated()
+                        .requestMatchers("/usuarios", "/usuarios/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.decoder(jwtDecoder())));
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt
+                        .decoder(jwtDecoder())
+                        .jwtAuthenticationConverter(usuarioRolesConverter)));
 
         return http.build();
     }
@@ -70,10 +80,9 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfig = new CorsConfiguration();
-        corsConfig.setAllowedOriginPatterns(Collections.singletonList("*"));
-        corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        corsConfig.setAllowedHeaders(Arrays.asList("*"));
-        corsConfig.setAllowCredentials(true);
+        corsConfig.setAllowedOrigins(allowedOrigins);
+        corsConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        corsConfig.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         corsConfig.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

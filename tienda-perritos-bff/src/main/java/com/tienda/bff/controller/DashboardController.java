@@ -18,7 +18,6 @@ import java.util.List;
 @RequestMapping("/dashboard")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = "*", maxAge = 3600)
 public class DashboardController {
 
     private final ProductosClient productosClient;
@@ -33,7 +32,7 @@ public class DashboardController {
 
         Mono<UsuarioDto> usuarioMono = usuariosClient.obtenerUsuarioActual(token);
 
-        Mono<Integer> productosCountMono = productosClient.obtenerTodosProductos(token)
+        Mono<Integer> productosCountMono = productosClient.obtenerTodosProductos("Bearer " + token)
                 .collectList()
                 .map(List::size)
                 .onErrorReturn(0);

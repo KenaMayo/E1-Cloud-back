@@ -48,7 +48,7 @@ public class UsuarioService {
     @Transactional(readOnly = true)
     public UsuarioDto obtenerPorEmail(String email) {
         log.debug("Obteniendo usuario con email: {}", email);
-        Usuario usuario = usuarioRepository.findByEmail(email)
+        Usuario usuario = usuarioRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new UsuarioNotFoundException("Usuario con email " + email + " no encontrado"));
         return toDto(usuario);
     }
@@ -58,7 +58,7 @@ public class UsuarioService {
      */
     @Transactional
     public UsuarioDto obtenerOCrear(String email, String nombre, String apellido) {
-        return usuarioRepository.findByEmail(email)
+        return usuarioRepository.findByEmailIgnoreCase(email)
                 .map(this::toDto)
                 .orElseGet(() -> crear(email, nombre, apellido, null));
     }

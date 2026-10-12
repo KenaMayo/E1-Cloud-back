@@ -16,7 +16,6 @@ import java.util.List;
 @RequestMapping("/productos")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = "*", maxAge = 3600)
 public class ProductosController {
 
     private final ProductosClient productosClient;
