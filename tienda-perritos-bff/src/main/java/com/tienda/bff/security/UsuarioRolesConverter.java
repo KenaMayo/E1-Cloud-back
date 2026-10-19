@@ -1,5 +1,7 @@
 package com.tienda.bff.security;
 
+// [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+/*
 import com.tienda.bff.client.UsuariosClient;
 import com.tienda.bff.dto.UsuarioDto;
 import lombok.RequiredArgsConstructor;
@@ -43,3 +45,4 @@ public class UsuarioRolesConverter implements Converter<Jwt, AbstractAuthenticat
                 .toList();
     }
 }
+*/

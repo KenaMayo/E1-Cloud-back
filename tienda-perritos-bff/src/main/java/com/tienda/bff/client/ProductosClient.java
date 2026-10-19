@@ -4,7 +4,8 @@ import com.tienda.bff.dto.ProductoDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
+// [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+// import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
@@ -23,7 +24,8 @@ public class ProductosClient {
     public Mono<ProductoDto> obtenerProducto(Long id, String authorizationHeader) {
         return webClient.get()
                 .uri(productosUrl + "/productos/{id}", id)
-                .header(HttpHeaders.AUTHORIZATION, authorizationHeader)
+                // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+                // .header(HttpHeaders.AUTHORIZATION, authorizationHeader)
                 .retrieve()
                 .bodyToMono(ProductoDto.class)
                 .doOnError(e -> log.error("Error obteniendo producto {}: {}", id, e.getMessage()));
@@ -32,7 +34,8 @@ public class ProductosClient {
     public Flux<ProductoDto> obtenerTodosProductos(String authorizationHeader) {
         return webClient.get()
                 .uri(productosUrl + "/productos")
-                .header(HttpHeaders.AUTHORIZATION, authorizationHeader)
+                // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+                // .header(HttpHeaders.AUTHORIZATION, authorizationHeader)
                 .retrieve()
                 .bodyToFlux(ProductoDto.class)
                 .doOnError(e -> log.error("Error obteniendo productos: {}", e.getMessage()));
@@ -41,7 +44,8 @@ public class ProductosClient {
     public Mono<ProductoDto> crearProducto(ProductoDto producto, String authorizationHeader) {
         return webClient.post()
                 .uri(productosUrl + "/productos")
-                .header(HttpHeaders.AUTHORIZATION, authorizationHeader)
+                // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+                // .header(HttpHeaders.AUTHORIZATION, authorizationHeader)
                 .bodyValue(producto)
                 .retrieve()
                 .bodyToMono(ProductoDto.class)
@@ -51,7 +55,8 @@ public class ProductosClient {
     public Mono<ProductoDto> actualizarProducto(Long id, ProductoDto producto, String authorizationHeader) {
         return webClient.put()
                 .uri(productosUrl + "/productos/{id}", id)
-                .header(HttpHeaders.AUTHORIZATION, authorizationHeader)
+                // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+                // .header(HttpHeaders.AUTHORIZATION, authorizationHeader)
                 .bodyValue(producto)
                 .retrieve()
                 .bodyToMono(ProductoDto.class)
@@ -61,7 +66,8 @@ public class ProductosClient {
     public Mono<Void> eliminarProducto(Long id, String authorizationHeader) {
         return webClient.delete()
                 .uri(productosUrl + "/productos/{id}", id)
-                .header(HttpHeaders.AUTHORIZATION, authorizationHeader)
+                // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+                // .header(HttpHeaders.AUTHORIZATION, authorizationHeader)
                 .retrieve()
                 .bodyToMono(Void.class)
                 .doOnError(e -> log.error("Error eliminando producto {}: {}", id, e.getMessage()));

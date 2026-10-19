@@ -1,18 +1,27 @@
 package com.tienda.bff.config;
 
+// [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+/*
 import com.tienda.bff.security.UsuarioRolesConverter;
+*/
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+// [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+/*
 import org.springframework.http.HttpMethod;
+*/
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+// [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+/*
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.jwt.*;
+*/
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -28,15 +37,33 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+    /*
     @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
     private String issuerUri;
 
     @Value("${azure.ad.audience}")
     private String expectedAudience;
+    */
 
     @Value("${cors.allowed-origins}")
     private List<String> allowedOrigins;
 
+    // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+    // Versión temporal sin autenticación: todos los endpoints quedan abiertos.
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(authz -> authz.anyRequest().permitAll());
+
+        return http.build();
+    }
+
+    // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+    /*
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, UsuarioRolesConverter usuarioRolesConverter) throws Exception {
         http
@@ -76,6 +103,7 @@ public class SecurityConfig {
 
         return jwtDecoder;
     }
+    */
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {

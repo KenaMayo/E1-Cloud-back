@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: ${DATABASE_USER}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./db/init:/docker-entrypoint-initdb.d:ro
@@ -32,9 +32,10 @@ services:
       DATABASE_NAME: ${DATABASE_NAME}
       DATABASE_USER: ${DATABASE_USER}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://login.microsoftonline.com/${MSAL_TENANT_ID}/v2.0
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://login.microsoftonline.com/${MSAL_TENANT_ID}/discovery/v2.0/keys
-      AZURE_AD_AUDIENCE: ${MSAL_CLIENT_ID}
+      # [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+      # SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://login.microsoftonline.com/${MSAL_TENANT_ID}/v2.0
+      # SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://login.microsoftonline.com/${MSAL_TENANT_ID}/discovery/v2.0/keys
+      # AZURE_AD_AUDIENCE: ${MSAL_CLIENT_ID}
     depends_on:
       postgres:
         condition: service_healthy
@@ -60,9 +61,10 @@ services:
       DATABASE_NAME: ${DATABASE_NAME}
       DATABASE_USER: ${DATABASE_USER}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://login.microsoftonline.com/${MSAL_TENANT_ID}/v2.0
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://login.microsoftonline.com/${MSAL_TENANT_ID}/discovery/v2.0/keys
-      AZURE_AD_AUDIENCE: ${MSAL_CLIENT_ID}
+      # [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+      # SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://login.microsoftonline.com/${MSAL_TENANT_ID}/v2.0
+      # SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://login.microsoftonline.com/${MSAL_TENANT_ID}/discovery/v2.0/keys
+      # AZURE_AD_AUDIENCE: ${MSAL_CLIENT_ID}
     depends_on:
       postgres:
         condition: service_healthy
@@ -87,9 +89,10 @@ services:
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       MS_PRODUCTOS_URL: http://ms-productos:8081/api/v1
       MS_USUARIOS_URL: http://ms-usuarios:8082/api/v1
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://login.microsoftonline.com/${MSAL_TENANT_ID}/v2.0
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://login.microsoftonline.com/${MSAL_TENANT_ID}/discovery/v2.0/keys
-      AZURE_AD_AUDIENCE: ${MSAL_CLIENT_ID}
+      # [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+      # SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://login.microsoftonline.com/${MSAL_TENANT_ID}/v2.0
+      # SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://login.microsoftonline.com/${MSAL_TENANT_ID}/discovery/v2.0/keys
+      # AZURE_AD_AUDIENCE: ${MSAL_CLIENT_ID}
     depends_on:
       ms-productos:
         condition: service_healthy

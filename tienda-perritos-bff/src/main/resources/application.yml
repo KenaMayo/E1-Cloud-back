@@ -1,12 +1,13 @@
 spring:
   application:
     name: bff
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI:https://login.microsoftonline.com/fc80740a-8501-4d9b-a246-8fbbd7ac5140/v2.0}
-          jwk-set-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI:https://login.microsoftonline.com/fc80740a-8501-4d9b-a246-8fbbd7ac5140/discovery/v2.0/keys}
+  # [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+  # security:
+  #   oauth2:
+  #     resourceserver:
+  #       jwt:
+  #         issuer-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI:https://login.microsoftonline.com/fc80740a-8501-4d9b-a246-8fbbd7ac5140/v2.0}
+  #         jwk-set-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI:https://login.microsoftonline.com/fc80740a-8501-4d9b-a246-8fbbd7ac5140/discovery/v2.0/keys}
 
 server:
   port: 8080
@@ -19,9 +20,10 @@ microservices:
   usuarios:
     url: ${MS_USUARIOS_URL:http://localhost:8082/api/v1}
 
-azure:
-  ad:
-    audience: ${AZURE_AD_AUDIENCE:db0c2b5d-d0b6-4b59-84b1-4ff4bb15f34d}
+# [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+# azure:
+#   ad:
+#     audience: ${AZURE_AD_AUDIENCE:db0c2b5d-d0b6-4b59-84b1-4ff4bb15f34d}
 
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost,http://localhost:4200}

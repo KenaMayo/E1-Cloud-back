@@ -1,5 +1,7 @@
 package com.tienda.usuarios.security;
 
+// [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+/*
 import com.tienda.usuarios.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.convert.converter.Converter;
@@ -46,3 +48,4 @@ public class UsuarioRolesConverter implements Converter<Jwt, AbstractAuthenticat
                 .toList();
     }
 }
+*/

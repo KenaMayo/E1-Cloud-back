@@ -1,5 +1,45 @@
 # Tienda de Perritos — Cloud Native Migration
 
+> ⚠️ **Autenticación Microsoft (MSAL / Azure AD) deshabilitada temporalmente** por fallas en Azure (pendiente soporte de Microsoft).
+> El código MSAL **no fue eliminado**: está comentado y marcado con `[MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft`.
+> Mientras tanto, la API queda abierta (sin token) y el "usuario actual" es un usuario por defecto (`app.default-user.*` en `tienda-perritos-ms-usuarios/src/main/resources/application.yml`, por defecto `a.balbontin.dvt@gmail.com`, ROLE_ADMIN).
+
+## Levantar el proyecto con Docker Compose
+
+Requisitos: Docker + Docker Compose. Los repos `E1-Cloud-back` y `E1-Cloud-front` deben estar en carpetas hermanas.
+
+```bash
+cd E1-Cloud-back
+docker compose up --build
+```
+
+| Servicio | URL |
+|---|---|
+| Frontend (nginx) | http://localhost |
+| BFF (Spring Boot) | http://localhost:8080/api/v1 |
+| PostgreSQL (desde el host) | `127.0.0.1:${POSTGRES_HOST_PORT:-5432}` (`.env` define 5433) |
+
+- Los microservicios se conectan a PostgreSQL con el nombre del servicio (`DATABASE_HOST=postgres`), no `localhost`.
+- Credenciales de BD en `.env` (`DATABASE_NAME`, `DATABASE_USER`, `DATABASE_PASSWORD`); datos persistidos en el volumen `postgres_data`.
+- `ms-productos` (8081) y `ms-usuarios` (8082) solo son accesibles dentro de la red de Docker.
+
+## Cómo reactivar MSAL
+
+Buscar todos los bloques con `grep -rn "MSAL-DISABLED" .` (en ambos repos) y, en cada archivo, **descomentar el bloque original y eliminar su reemplazo temporal**:
+
+**Backend (`E1-Cloud-back`)**
+1. `*/pom.xml` (bff, ms-productos, ms-usuarios): BOM `spring-cloud-azure-dependencies`, `spring-boot-starter-oauth2-resource-server` y `spring-cloud-azure-starter-active-directory`.
+2. `*/src/main/resources/application.yml` (los 3): `spring.security.oauth2…`, `spring.cloud.azure…` (solo ms) y `azure.ad.audience`. En ms-usuarios se puede eliminar `app.default-user`.
+3. `SecurityConfig.java` (bff, ms-productos, ms-usuarios): borrar la versión sin autenticación y descomentar la original (imports, campos, `filterChain`, `jwtDecoder`; en ms: `@RequiredArgsConstructor`).
+4. `tienda-perritos-bff/.../security/UsuarioRolesConverter.java`, `tienda-perritos-ms-usuarios/.../security/UsuarioRolesConverter.java` y `tienda-perritos-ms-productos/.../security/JwtAuthenticationFilter.java`: descomentar el archivo completo.
+5. BFF `controller/UsuariosController.java`, `AuthController.java`, `DashboardController.java`: borrar la clase temporal (arriba) y descomentar la original (abajo).
+6. BFF `controller/ProductosController.java` (parámetro `@RequestHeader` obligatorio) y `client/ProductosClient.java` / `client/UsuariosClient.java` (cabeceras `Authorization` + import `HttpHeaders`).
+7. ms-usuarios `controller/UsuarioController.java`: borrar `/me` por defecto (y los `@Value app.default-user.*`), descomentar `emailDe`, `/me` y el import de `Authentication`/`Jwt`.
+8. `docker-compose.yml` (3 servicios: variables `SPRING_SECURITY_OAUTH2_*` y `AZURE_AD_AUDIENCE`) y `.env` (`MSAL_CLIENT_ID`, `MSAL_TENANT_ID`).
+9. Reconstruir: `docker compose up --build`.
+
+**Frontend (`E1-Cloud-front`)**: ver su `README.md`.
+
 Migración de monolito Node.js/EKS a arquitectura cloud native con Spring Boot, Angular, AWS API Gateway y Azure AD.
 
 **Asignatura**: DSY1107 – Desarrollo Cloud Native I  

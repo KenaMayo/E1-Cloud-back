@@ -6,6 +6,105 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
+
+import java.util.List;
+
+// [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+// Versión temporal sin autenticación: no hay JWT, se invoca el microservicio sin token (null).
+@RestController
+@RequestMapping("/usuarios")
+@RequiredArgsConstructor
+@Slf4j
+public class UsuariosController {
+
+    private final UsuariosClient usuariosClient;
+
+    @GetMapping("/me")
+    public ResponseEntity<UsuarioDto> obtenerUsuarioActual() {
+        log.info("Obteniendo usuario actual");
+
+        return usuariosClient.obtenerUsuarioActual(null)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build())
+                .block();
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<UsuarioDto> actualizarUsuarioActual(@RequestBody UsuarioDto usuario) {
+        log.info("Actualizar usuario actual");
+
+        return usuariosClient.actualizarUsuarioActual(usuario, null)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build())
+                .block();
+    }
+
+    @GetMapping
+    public ResponseEntity<List<UsuarioDto>> obtenerTodos() {
+        log.info("Obteniendo todos los usuarios");
+
+        List<UsuarioDto> usuarios = usuariosClient.obtenerTodosUsuarios(null)
+                .collectList()
+                .block();
+
+        return ResponseEntity.ok(usuarios);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<UsuarioDto> obtenerPorId(@PathVariable Long id) {
+        log.info("Obteniendo usuario con ID: {}", id);
+
+        return usuariosClient.obtenerUsuario(id, null)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build())
+                .block();
+    }
+
+    @PostMapping
+    public ResponseEntity<UsuarioDto> crear(@RequestBody UsuarioDto usuario) {
+        log.info("Crear nuevo usuario");
+
+        return usuariosClient.crearUsuario(usuario, null)
+                .map(u -> ResponseEntity.status(HttpStatus.CREATED).body(u))
+                .defaultIfEmpty(ResponseEntity.badRequest().build())
+                .block();
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<UsuarioDto> actualizar(
+            @PathVariable Long id,
+            @RequestBody UsuarioDto usuario) {
+        log.info("Actualizar usuario con ID: {}", id);
+
+        return usuariosClient.actualizarUsuario(id, usuario, null)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build())
+                .block();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        log.info("Eliminar usuario con ID: {}", id);
+
+        return usuariosClient.eliminarUsuario(id, null)
+                .then(Mono.just(ResponseEntity.noContent().<Void>build()))
+                .defaultIfEmpty(ResponseEntity.notFound().build())
+                .block();
+    }
+}
+
+// [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+/*
+package com.tienda.bff.controller;
+
+import com.tienda.bff.client.UsuariosClient;
+import com.tienda.bff.dto.UsuarioDto;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
@@ -117,3 +216,4 @@ public class UsuariosController {
                 .block();
     }
 }
+*/

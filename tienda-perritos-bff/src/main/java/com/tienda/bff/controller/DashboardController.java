@@ -7,6 +7,61 @@ import com.tienda.bff.dto.UsuarioDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
+
+import java.util.List;
+
+// [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+// Versión temporal sin autenticación: no hay JWT, se invoca los microservicios sin token (null).
+@RestController
+@RequestMapping("/dashboard")
+@RequiredArgsConstructor
+@Slf4j
+public class DashboardController {
+
+    private final ProductosClient productosClient;
+    private final UsuariosClient usuariosClient;
+
+    @GetMapping
+    public ResponseEntity<?> obtenerDashboard() {
+        log.info("Obteniendo datos del dashboard");
+
+        Mono<UsuarioDto> usuarioMono = usuariosClient.obtenerUsuarioActual(null);
+
+        Mono<Integer> productosCountMono = productosClient.obtenerTodosProductos(null)
+                .collectList()
+                .map(List::size)
+                .onErrorReturn(0);
+
+        Mono<Long> usuariosCountMono = usuariosClient.obtenerTodosUsuarios(null)
+                .collectList()
+                .map(list -> (long) list.size())
+                .onErrorReturn(0L);
+
+        return Mono.zip(usuarioMono, productosCountMono, usuariosCountMono)
+                .map(tuple -> DashboardDto.builder()
+                        .usuario(tuple.getT1())
+                        .totalProductos(tuple.getT2())
+                        .totalUsuarios(tuple.getT3())
+                        .build())
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build())
+                .block();
+    }
+}
+
+// [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+/*
+package com.tienda.bff.controller;
+
+import com.tienda.bff.client.ProductosClient;
+import com.tienda.bff.client.UsuariosClient;
+import com.tienda.bff.dto.DashboardDto;
+import com.tienda.bff.dto.UsuarioDto;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
@@ -53,4 +108,5 @@ public class DashboardController {
                 .block();
     }
 }
+*/
 

@@ -6,10 +6,14 @@ import com.tienda.usuarios.service.UsuarioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+// [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+/*
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
+*/
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,12 +26,26 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
 
+    @Value("${app.default-user.email}")
+    private String defaultUserEmail;
+
+    @Value("${app.default-user.nombre}")
+    private String defaultUserNombre;
+
+    @Value("${app.default-user.apellido}")
+    private String defaultUserApellido;
+
+    // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+    /*
     private String emailDe(Authentication authentication) {
         Jwt jwt = (Jwt) authentication.getPrincipal();
         String email = jwt.getClaimAsString("preferred_username");
         return email != null ? email : jwt.getClaimAsString("email");
     }
+    */
 
+    // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+    /*
     @GetMapping("/me")
     public ResponseEntity<UsuarioDto> obtenerUsuarioActual(Authentication authentication) {
         log.info("Obteniendo usuario actual");
@@ -55,6 +73,30 @@ public class UsuarioController {
         log.info("Actualizar usuario actual");
         String email = emailDe(authentication);
         UsuarioDto usuarioActual = usuarioService.obtenerPorEmail(email);
+        UsuarioDto usuario = usuarioService.actualizar(
+                usuarioActual.getId(),
+                request.getNombre(),
+                request.getApellido(),
+                null
+        );
+        return ResponseEntity.ok(usuario);
+    }
+    */
+
+    // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+    // Sin token no hay identidad: se usa el usuario por defecto configurado en app.default-user.*
+    @GetMapping("/me")
+    public ResponseEntity<UsuarioDto> obtenerUsuarioActual() {
+        log.info("Obteniendo usuario actual (usuario por defecto)");
+        return ResponseEntity.ok(usuarioService.obtenerOCrear(defaultUserEmail, defaultUserNombre, defaultUserApellido));
+    }
+
+    // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+    @PutMapping("/me")
+    public ResponseEntity<UsuarioDto> actualizarUsuarioActual(
+            @Valid @RequestBody CreateUsuarioRequest request) {
+        log.info("Actualizar usuario actual (usuario por defecto)");
+        UsuarioDto usuarioActual = usuarioService.obtenerPorEmail(defaultUserEmail);
         UsuarioDto usuario = usuarioService.actualizar(
                 usuarioActual.getId(),
                 request.getNombre(),

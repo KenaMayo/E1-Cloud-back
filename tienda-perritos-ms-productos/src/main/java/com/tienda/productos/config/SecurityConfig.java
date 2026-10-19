@@ -1,26 +1,38 @@
 package com.tienda.productos.config;
 
+// [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+/*
 import com.tienda.productos.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+*/
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+// [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+/*
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.jwt.*;
+*/
 import org.springframework.security.web.SecurityFilterChain;
+// [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+/*
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+*/
 
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
+// [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+// @RequiredArgsConstructor
 public class SecurityConfig {
 
+    // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+    /*
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
@@ -28,7 +40,22 @@ public class SecurityConfig {
 
     @Value("${azure.ad.audience}")
     private String expectedAudience;
+    */
 
+    // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+    // Versión temporal sin autenticación: todos los endpoints quedan abiertos.
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(authz -> authz.anyRequest().permitAll());
+
+        return http.build();
+    }
+
+    // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+    /*
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -59,4 +86,5 @@ public class SecurityConfig {
 
         return jwtDecoder;
     }
+    */
 }

@@ -22,7 +22,8 @@ public class UsuariosClient {
     public Mono<UsuarioDto> obtenerUsuarioActual(String token) {
         return webClient.get()
                 .uri(usuariosUrl + "/usuarios/me")
-                .header("Authorization", "Bearer " + token)
+                // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+                // .header("Authorization", "Bearer " + token)
                 .retrieve()
                 .bodyToMono(UsuarioDto.class)
                 .doOnError(e -> log.error("Error obteniendo usuario actual: {}", e.getMessage()));
@@ -31,7 +32,8 @@ public class UsuariosClient {
     public Mono<UsuarioDto> obtenerUsuario(Long id, String token) {
         return webClient.get()
                 .uri(usuariosUrl + "/usuarios/{id}", id)
-                .header("Authorization", "Bearer " + token)
+                // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+                // .header("Authorization", "Bearer " + token)
                 .retrieve()
                 .bodyToMono(UsuarioDto.class)
                 .doOnError(e -> log.error("Error obteniendo usuario {}: {}", id, e.getMessage()));
@@ -40,7 +42,8 @@ public class UsuariosClient {
     public Flux<UsuarioDto> obtenerTodosUsuarios(String token) {
         return webClient.get()
                 .uri(usuariosUrl + "/usuarios")
-                .header("Authorization", "Bearer " + token)
+                // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+                // .header("Authorization", "Bearer " + token)
                 .retrieve()
                 .bodyToFlux(UsuarioDto.class)
                 .doOnError(e -> log.error("Error obteniendo usuarios: {}", e.getMessage()));
@@ -49,7 +52,8 @@ public class UsuariosClient {
     public Mono<UsuarioDto> crearUsuario(UsuarioDto usuario, String token) {
         return webClient.post()
                 .uri(usuariosUrl + "/usuarios")
-                .header("Authorization", "Bearer " + token)
+                // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+                // .header("Authorization", "Bearer " + token)
                 .bodyValue(usuario)
                 .retrieve()
                 .bodyToMono(UsuarioDto.class)
@@ -59,7 +63,8 @@ public class UsuariosClient {
     public Mono<UsuarioDto> actualizarUsuarioActual(UsuarioDto usuario, String token) {
         return webClient.put()
                 .uri(usuariosUrl + "/usuarios/me")
-                .header("Authorization", "Bearer " + token)
+                // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+                // .header("Authorization", "Bearer " + token)
                 .bodyValue(usuario)
                 .retrieve()
                 .bodyToMono(UsuarioDto.class)
@@ -69,7 +74,8 @@ public class UsuariosClient {
     public Mono<UsuarioDto> actualizarUsuario(Long id, UsuarioDto usuario, String token) {
         return webClient.put()
                 .uri(usuariosUrl + "/usuarios/{id}", id)
-                .header("Authorization", "Bearer " + token)
+                // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+                // .header("Authorization", "Bearer " + token)
                 .bodyValue(usuario)
                 .retrieve()
                 .bodyToMono(UsuarioDto.class)
@@ -79,7 +85,8 @@ public class UsuariosClient {
     public Mono<Void> eliminarUsuario(Long id, String token) {
         return webClient.delete()
                 .uri(usuariosUrl + "/usuarios/{id}", id)
-                .header("Authorization", "Bearer " + token)
+                // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+                // .header("Authorization", "Bearer " + token)
                 .retrieve()
                 .bodyToMono(Void.class)
                 .doOnError(e -> log.error("Error eliminando usuario {}: {}", id, e.getMessage()));
