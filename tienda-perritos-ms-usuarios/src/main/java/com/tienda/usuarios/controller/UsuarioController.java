@@ -6,9 +6,9 @@ import com.tienda.usuarios.service.UsuarioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
 /*
 import org.springframework.security.core.Authentication;
@@ -25,15 +25,6 @@ import java.util.List;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
-
-    @Value("${app.default-user.email}")
-    private String defaultUserEmail;
-
-    @Value("${app.default-user.nombre}")
-    private String defaultUserNombre;
-
-    @Value("${app.default-user.apellido}")
-    private String defaultUserApellido;
 
     // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
     /*
@@ -83,20 +74,19 @@ public class UsuarioController {
     }
     */
 
-    // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
-    // Sin token no hay identidad: se usa el usuario por defecto configurado en app.default-user.*
+    // Login por base de datos: la identidad sale del token JWT propio (username).
     @GetMapping("/me")
-    public ResponseEntity<UsuarioDto> obtenerUsuarioActual() {
-        log.info("Obteniendo usuario actual (usuario por defecto)");
-        return ResponseEntity.ok(usuarioService.obtenerOCrear(defaultUserEmail, defaultUserNombre, defaultUserApellido));
+    public ResponseEntity<UsuarioDto> obtenerUsuarioActual(Authentication authentication) {
+        log.info("Obteniendo usuario actual");
+        return ResponseEntity.ok(usuarioService.obtenerPorUsername(authentication.getName()));
     }
 
-    // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
     @PutMapping("/me")
     public ResponseEntity<UsuarioDto> actualizarUsuarioActual(
+            Authentication authentication,
             @Valid @RequestBody CreateUsuarioRequest request) {
-        log.info("Actualizar usuario actual (usuario por defecto)");
-        UsuarioDto usuarioActual = usuarioService.obtenerPorEmail(defaultUserEmail);
+        log.info("Actualizar usuario actual");
+        UsuarioDto usuarioActual = usuarioService.obtenerPorUsername(authentication.getName());
         UsuarioDto usuario = usuarioService.actualizar(
                 usuarioActual.getId(),
                 request.getNombre(),
@@ -129,13 +119,15 @@ public class UsuarioController {
 
     @PostMapping
     public ResponseEntity<UsuarioDto> crear(@Valid @RequestBody CreateUsuarioRequest request) {
-        log.info("Crear nuevo usuario: {}", request.getEmail());
+        log.info("Crear nuevo usuario");
 
         UsuarioDto usuario = usuarioService.crear(
+                request.getUsername(),
                 request.getEmail(),
                 request.getNombre(),
                 request.getApellido(),
-                request.getRoles()
+                request.getRoles(),
+                request.getPassword()
         );
 
         return ResponseEntity.status(HttpStatus.CREATED).body(usuario);

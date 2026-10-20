@@ -6,13 +6,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 
-// [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
-// Versión temporal sin autenticación: no hay JWT, se invoca el microservicio sin token (null).
+// Versión con login por base de datos (JWT propio); el token se reenvía a ms-usuarios.
+// [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft (versión MSAL al final del archivo)
 @RestController
 @RequestMapping("/usuarios")
 @RequiredArgsConstructor
@@ -21,31 +22,36 @@ public class UsuariosController {
 
     private final UsuariosClient usuariosClient;
 
+    private static String token(Authentication authentication) {
+        return (String) authentication.getCredentials();
+    }
+
     @GetMapping("/me")
-    public ResponseEntity<UsuarioDto> obtenerUsuarioActual() {
+    public ResponseEntity<UsuarioDto> obtenerUsuarioActual(Authentication authentication) {
         log.info("Obteniendo usuario actual");
 
-        return usuariosClient.obtenerUsuarioActual(null)
+        return usuariosClient.obtenerUsuarioActual(token(authentication))
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build())
                 .block();
     }
 
     @PutMapping("/me")
-    public ResponseEntity<UsuarioDto> actualizarUsuarioActual(@RequestBody UsuarioDto usuario) {
+    public ResponseEntity<UsuarioDto> actualizarUsuarioActual(@RequestBody UsuarioDto usuario,
+                                                              Authentication authentication) {
         log.info("Actualizar usuario actual");
 
-        return usuariosClient.actualizarUsuarioActual(usuario, null)
+        return usuariosClient.actualizarUsuarioActual(usuario, token(authentication))
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build())
                 .block();
     }
 
     @GetMapping
-    public ResponseEntity<List<UsuarioDto>> obtenerTodos() {
+    public ResponseEntity<List<UsuarioDto>> obtenerTodos(Authentication authentication) {
         log.info("Obteniendo todos los usuarios");
 
-        List<UsuarioDto> usuarios = usuariosClient.obtenerTodosUsuarios(null)
+        List<UsuarioDto> usuarios = usuariosClient.obtenerTodosUsuarios(token(authentication))
                 .collectList()
                 .block();
 
@@ -53,20 +59,20 @@ public class UsuariosController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UsuarioDto> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<UsuarioDto> obtenerPorId(@PathVariable Long id, Authentication authentication) {
         log.info("Obteniendo usuario con ID: {}", id);
 
-        return usuariosClient.obtenerUsuario(id, null)
+        return usuariosClient.obtenerUsuario(id, token(authentication))
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build())
                 .block();
     }
 
     @PostMapping
-    public ResponseEntity<UsuarioDto> crear(@RequestBody UsuarioDto usuario) {
+    public ResponseEntity<UsuarioDto> crear(@RequestBody UsuarioDto usuario, Authentication authentication) {
         log.info("Crear nuevo usuario");
 
-        return usuariosClient.crearUsuario(usuario, null)
+        return usuariosClient.crearUsuario(usuario, token(authentication))
                 .map(u -> ResponseEntity.status(HttpStatus.CREATED).body(u))
                 .defaultIfEmpty(ResponseEntity.badRequest().build())
                 .block();
@@ -75,20 +81,21 @@ public class UsuariosController {
     @PutMapping("/{id}")
     public ResponseEntity<UsuarioDto> actualizar(
             @PathVariable Long id,
-            @RequestBody UsuarioDto usuario) {
+            @RequestBody UsuarioDto usuario,
+            Authentication authentication) {
         log.info("Actualizar usuario con ID: {}", id);
 
-        return usuariosClient.actualizarUsuario(id, usuario, null)
+        return usuariosClient.actualizarUsuario(id, usuario, token(authentication))
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build())
                 .block();
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable Long id, Authentication authentication) {
         log.info("Eliminar usuario con ID: {}", id);
 
-        return usuariosClient.eliminarUsuario(id, null)
+        return usuariosClient.eliminarUsuario(id, token(authentication))
                 .then(Mono.just(ResponseEntity.noContent().<Void>build()))
                 .defaultIfEmpty(ResponseEntity.notFound().build())
                 .block();

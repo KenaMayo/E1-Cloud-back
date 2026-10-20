@@ -10,7 +10,7 @@ services:
       - "127.0.0.1:${POSTGRES_HOST_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./db/init:/docker-entrypoint-initdb.d:ro
+      - ./sql:/docker-entrypoint-initdb.d:ro
     networks:
       - tienda-network
     healthcheck:
@@ -61,6 +61,8 @@ services:
       DATABASE_NAME: ${DATABASE_NAME}
       DATABASE_USER: ${DATABASE_USER}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      # Solo desarrollo: en producción definir JWT_SECRET real (>= 32 caracteres)
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me-0123456789abcdef}
       # [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
       # SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://login.microsoftonline.com/${MSAL_TENANT_ID}/v2.0
       # SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://login.microsoftonline.com/${MSAL_TENANT_ID}/discovery/v2.0/keys
@@ -89,6 +91,7 @@ services:
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       MS_PRODUCTOS_URL: http://ms-productos:8081/api/v1
       MS_USUARIOS_URL: http://ms-usuarios:8082/api/v1
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me-0123456789abcdef}
       # [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
       # SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://login.microsoftonline.com/${MSAL_TENANT_ID}/v2.0
       # SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://login.microsoftonline.com/${MSAL_TENANT_ID}/discovery/v2.0/keys

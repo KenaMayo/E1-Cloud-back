@@ -25,6 +25,10 @@ microservices:
 #   ad:
 #     audience: ${AZURE_AD_AUDIENCE:db0c2b5d-d0b6-4b59-84b1-4ff4bb15f34d}
 
+# Secreto del JWT propio (login por base de datos), el mismo que usa ms-usuarios. Sin valor por defecto: se define en docker-compose.yml (dev) o JWT_SECRET.
+jwt:
+  secret: ${JWT_SECRET}
+
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost,http://localhost:4200}
 

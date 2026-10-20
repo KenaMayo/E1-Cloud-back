@@ -7,13 +7,14 @@ import com.tienda.bff.dto.UsuarioDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 
-// [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
-// Versión temporal sin autenticación: no hay JWT, se invoca los microservicios sin token (null).
+// Versión con login por base de datos (JWT propio); el token se reenvía a ms-usuarios.
+// [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft (versión MSAL al final del archivo)
 @RestController
 @RequestMapping("/dashboard")
 @RequiredArgsConstructor
@@ -24,17 +25,20 @@ public class DashboardController {
     private final UsuariosClient usuariosClient;
 
     @GetMapping
-    public ResponseEntity<?> obtenerDashboard() {
+    public ResponseEntity<?> obtenerDashboard(Authentication authentication) {
         log.info("Obteniendo datos del dashboard");
 
-        Mono<UsuarioDto> usuarioMono = usuariosClient.obtenerUsuarioActual(null);
+        String token = (String) authentication.getCredentials();
+
+        Mono<UsuarioDto> usuarioMono = usuariosClient.obtenerUsuarioActual(token);
 
         Mono<Integer> productosCountMono = productosClient.obtenerTodosProductos(null)
                 .collectList()
                 .map(List::size)
                 .onErrorReturn(0);
 
-        Mono<Long> usuariosCountMono = usuariosClient.obtenerTodosUsuarios(null)
+        // Listar usuarios es solo ADMIN: para otros roles el conteo cae en 0
+        Mono<Long> usuariosCountMono = usuariosClient.obtenerTodosUsuarios(token)
                 .collectList()
                 .map(list -> (long) list.size())
                 .onErrorReturn(0L);

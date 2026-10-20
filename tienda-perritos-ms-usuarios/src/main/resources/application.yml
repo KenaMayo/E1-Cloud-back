@@ -34,12 +34,10 @@ spring:
 #   ad:
 #     audience: ${AZURE_AD_AUDIENCE:db0c2b5d-d0b6-4b59-84b1-4ff4bb15f34d}
 
-# Usuario por defecto mientras MSAL está deshabilitado (debe existir en db/init/02-usuarios.sql)
-app:
-  default-user:
-    email: ${DEFAULT_USER_EMAIL:a.balbontin.dvt@gmail.com}
-    nombre: ${DEFAULT_USER_NOMBRE:Administrador}
-    apellido: ${DEFAULT_USER_APELLIDO:Tienda}
+# Secreto del JWT propio (login por base de datos). Sin valor por defecto: se define en docker-compose.yml (dev) o JWT_SECRET.
+jwt:
+  secret: ${JWT_SECRET}
+  expiration-minutes: ${JWT_EXPIRATION_MINUTES:60}
 
 server:
   port: 8082

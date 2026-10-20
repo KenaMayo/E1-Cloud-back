@@ -1,12 +1,18 @@
 package com.tienda.bff.config;
 
+import com.tienda.bff.security.JwtAuthenticationFilter;
+import com.tienda.bff.security.JwtService;
 // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
 /*
 import com.tienda.bff.security.UsuarioRolesConverter;
 */
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
 /*
 import org.springframework.http.HttpMethod;
@@ -23,6 +29,7 @@ import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.jwt.*;
 */
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -31,6 +38,7 @@ import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import io.netty.resolver.DefaultAddressResolverGroup;
 import reactor.netty.http.client.HttpClient;
 
+import java.io.IOException;
 import java.util.List;
 
 @Configuration
@@ -49,17 +57,36 @@ public class SecurityConfig {
     @Value("${cors.allowed-origins}")
     private List<String> allowedOrigins;
 
-    // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
-    // Versión temporal sin autenticación: todos los endpoints quedan abiertos.
+    // Login por base de datos con JWT propio (reemplazo temporal de MSAL)
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, JwtService jwtService) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(authz -> authz.anyRequest().permitAll());
+                .authorizeHttpRequests(authz -> authz
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/logout").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/productos", "/productos/**").permitAll()
+                        .requestMatchers("/productos", "/productos/**").hasRole("ADMIN")
+                        .requestMatchers("/auth/me", "/usuarios/me", "/dashboard").authenticated()
+                        .requestMatchers("/usuarios", "/usuarios/**").hasRole("ADMIN")
+                        .anyRequest().authenticated()
+                )
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, e) -> escribir(response, HttpStatus.UNAUTHORIZED, "No autenticado"))
+                        .accessDeniedHandler((request, response, e) -> escribir(response, HttpStatus.FORBIDDEN, "Acceso denegado")))
+                .addFilterBefore(new JwtAuthenticationFilter(jwtService), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    private static void escribir(HttpServletResponse response, HttpStatus status, String mensaje) throws IOException {
+        response.setStatus(status.value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write("{\"status\":" + status.value() + ",\"message\":\"" + mensaje + "\"}");
     }
 
     // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft

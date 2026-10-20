@@ -2,7 +2,46 @@
 
 > ⚠️ **Autenticación Microsoft (MSAL / Azure AD) deshabilitada temporalmente** por fallas en Azure (pendiente soporte de Microsoft).
 > El código MSAL **no fue eliminado**: está comentado y marcado con `[MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft`.
-> Mientras tanto, la API queda abierta (sin token) y el "usuario actual" es un usuario por defecto (`app.default-user.*` en `tienda-perritos-ms-usuarios/src/main/resources/application.yml`, por defecto `a.balbontin.dvt@gmail.com`, ROLE_ADMIN).
+> Mientras tanto hay un **login básico por base de datos** (usuarios con rol `ADMIN`/`USER`, contraseñas BCrypt, JWT propio firmado con `JWT_SECRET`).
+
+## Login por base de datos
+
+Credenciales de prueba (solo desarrollo):
+
+| username | contraseña | rol |
+|---|---|---|
+| `admin` | `admin123` | ADMIN |
+| `user` | `user123` | USER |
+
+- Las contraseñas se guardan solo como hash BCrypt (costo 10) en la tabla `contrasenas`; el hash nunca se devuelve por la API.
+- `ms-usuarios` emite el JWT (HS256, 60 min). El BFF lo valida con el mismo `JWT_SECRET` y aplica los roles.
+- `JWT_SECRET` (≥ 32 caracteres): `docker-compose.yml` trae un valor **solo de desarrollo**; en cualquier otro entorno defínelo en `.env` (ver `.env.example`).
+- `ms-productos` y `ms-usuarios` no publican puertos: solo el BFF es accesible desde fuera.
+
+Endpoints (prefijo `/api/v1`, vía BFF `:8080` o `http://localhost/api/v1`):
+
+| Método y ruta | Acceso |
+|---|---|
+| `POST /auth/login` | Público |
+| `POST /auth/logout` | Público (el frontend descarta el token) |
+| `GET /auth/me` | ADMIN, USER |
+| `GET /productos`, `GET /productos/**` | Público |
+| `POST/PUT/DELETE /productos/**` | ADMIN |
+| `GET /dashboard`, `GET/PUT /usuarios/me` | ADMIN, USER |
+| `/usuarios`, `/usuarios/**` (gestión) | ADMIN |
+| `/actuator/health`, Swagger | Público |
+
+Sin token → 401; con token sin permiso → 403.
+
+### Script SQL de usuarios
+
+`sql/00_productos.sql` y `sql/01_usuarios_contrasenas.sql` se montan en `/docker-entrypoint-initdb.d/` y se ejecutan **solo cuando el volumen de PostgreSQL está vacío**. Para aplicar el script de usuarios sobre una base existente (borra y recrea `usuarios` y `contrasenas`):
+
+```bash
+docker compose exec -T postgres psql -U postgres -d tienda_perritos -f /docker-entrypoint-initdb.d/01_usuarios_contrasenas.sql
+```
+
+(usa los valores de `DATABASE_USER` / `DATABASE_NAME` de tu `.env`). Ninguna otra tabla tiene claves foráneas hacia `usuarios`.
 
 ## Levantar el proyecto con Docker Compose
 
@@ -10,7 +49,8 @@ Requisitos: Docker + Docker Compose. Los repos `E1-Cloud-back` y `E1-Cloud-front
 
 ```bash
 cd E1-Cloud-back
-docker compose up --build
+cp .env.example .env      # ajustar valores (solo la primera vez)
+docker compose down -v && docker compose up --build
 ```
 
 | Servicio | URL |
@@ -25,17 +65,17 @@ docker compose up --build
 
 ## Cómo reactivar MSAL
 
-Buscar todos los bloques con `grep -rn "MSAL-DISABLED" .` (en ambos repos) y, en cada archivo, **descomentar el bloque original y eliminar su reemplazo temporal**:
+Buscar todos los bloques con `grep -rn "MSAL-DISABLED" .` (en ambos repos) y, en cada archivo, **descomentar el bloque original y eliminar su reemplazo temporal (el login por base de datos)**:
 
 **Backend (`E1-Cloud-back`)**
 1. `*/pom.xml` (bff, ms-productos, ms-usuarios): BOM `spring-cloud-azure-dependencies`, `spring-boot-starter-oauth2-resource-server` y `spring-cloud-azure-starter-active-directory`.
-2. `*/src/main/resources/application.yml` (los 3): `spring.security.oauth2…`, `spring.cloud.azure…` (solo ms) y `azure.ad.audience`. En ms-usuarios se puede eliminar `app.default-user`.
-3. `SecurityConfig.java` (bff, ms-productos, ms-usuarios): borrar la versión sin autenticación y descomentar la original (imports, campos, `filterChain`, `jwtDecoder`; en ms: `@RequiredArgsConstructor`).
-4. `tienda-perritos-bff/.../security/UsuarioRolesConverter.java`, `tienda-perritos-ms-usuarios/.../security/UsuarioRolesConverter.java` y `tienda-perritos-ms-productos/.../security/JwtAuthenticationFilter.java`: descomentar el archivo completo.
-5. BFF `controller/UsuariosController.java`, `AuthController.java`, `DashboardController.java`: borrar la clase temporal (arriba) y descomentar la original (abajo).
-6. BFF `controller/ProductosController.java` (parámetro `@RequestHeader` obligatorio) y `client/ProductosClient.java` / `client/UsuariosClient.java` (cabeceras `Authorization` + import `HttpHeaders`).
-7. ms-usuarios `controller/UsuarioController.java`: borrar `/me` por defecto (y los `@Value app.default-user.*`), descomentar `emailDe`, `/me` y el import de `Authentication`/`Jwt`.
-8. `docker-compose.yml` (3 servicios: variables `SPRING_SECURITY_OAUTH2_*` y `AZURE_AD_AUDIENCE`) y `.env` (`MSAL_CLIENT_ID`, `MSAL_TENANT_ID`).
+2. `*/src/main/resources/application.yml` (los 3): `spring.security.oauth2…`, `spring.cloud.azure…` (solo ms) y `azure.ad.audience`. Se puede quitar `jwt.*` (bff y ms-usuarios).
+3. `SecurityConfig.java` (bff, ms-productos, ms-usuarios): borrar la `SecurityFilterChain` del login por base de datos (y el bean `BCryptPasswordEncoder` / `JwtAuthenticationFilter` si ya no se usan) y descomentar la original (imports, campos, `filterChain`, `jwtDecoder`; en ms: `@RequiredArgsConstructor`). No dejar dos `SecurityFilterChain` activas.
+4. `tienda-perritos-bff/.../security/UsuarioRolesConverter.java`, `tienda-perritos-ms-usuarios/.../security/UsuarioRolesConverter.java` y `tienda-perritos-ms-productos/.../security/JwtAuthenticationFilter.java`: descomentar el archivo completo. Eliminar `security/JwtService` y `security/JwtAuthenticationFilter` del bff.
+5. BFF `controller/UsuariosController.java`, `AuthController.java`, `DashboardController.java`: borrar la clase activa (arriba) y descomentar la original (abajo). Las clases `Auth*` del login propio (`AuthController`, `AuthService`, `JwtService`…) de ms-usuarios pueden retirarse.
+6. BFF `controller/ProductosController.java` (parámetro `@RequestHeader` obligatorio) y `client/ProductosClient.java` / `client/UsuariosClient.java` (cabeceras `Authorization`; quitar el helper `bearer(token)`).
+7. ms-usuarios `controller/UsuarioController.java`: reemplazar `/me` por `Authentication` con el original comentado (`emailDe`, `/me`, import `Jwt`).
+8. `docker-compose.yml` (3 servicios: descomentar variables `SPRING_SECURITY_OAUTH2_*` y `AZURE_AD_AUDIENCE`; retirar `JWT_SECRET`) y `.env` (`MSAL_CLIENT_ID`, `MSAL_TENANT_ID`).
 9. Reconstruir: `docker compose up --build`.
 
 **Frontend (`E1-Cloud-front`)**: ver su `README.md`.

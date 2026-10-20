@@ -14,9 +14,15 @@ import java.time.LocalDateTime;
 @Builder
 public class Usuario {
 
+    public static final String ROL_ADMIN = "ADMIN";
+    public static final String ROL_USER = "USER";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false, unique = true, length = 50)
+    private String username;
 
     @Column(nullable = false, unique = true, length = 100)
     private String email;
@@ -27,26 +33,30 @@ public class Usuario {
     @Column(nullable = false, length = 100)
     private String apellido;
 
-    @Column(length = 100)
-    private String roles; // Formato: "ROLE_USER,ROLE_ADMIN" (separado por comas)
+    @Column(nullable = false, length = 20)
+    private String rol; // ADMIN o USER
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean activo = true;
 
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    @Column(name = "creado_en", nullable = false, updatable = false)
+    private LocalDateTime creadoEn;
+
+    @Column(name = "actualizado_en")
+    private LocalDateTime actualizadoEn;
 
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-        if (this.roles == null) {
-            this.roles = "ROLE_USER";
+        this.creadoEn = LocalDateTime.now();
+        this.actualizadoEn = LocalDateTime.now();
+        if (this.rol == null) {
+            this.rol = ROL_USER;
         }
     }
 
     @PreUpdate
     protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
+        this.actualizadoEn = LocalDateTime.now();
     }
 }
