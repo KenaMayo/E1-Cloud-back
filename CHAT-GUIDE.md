@@ -95,8 +95,3 @@ docker compose exec postgres psql -U <DATABASE_USER> -d <DATABASE_NAME> -c "sele
 - [ ] Solicitud y respuesta de cotización se representan distinto en ambas pantallas.
 - [ ] La consola muestra logs `[OK]` y los errores muestran `[ERROR]`.
 
-## 8. Preguntas para el alumno
-
-1. ¿Por qué se necesitan dos colas enlazadas al mismo topic exchange en vez de dos listeners consumiendo `chat.persist.queue`?
-2. ¿Qué diferencia hay entre el ACK automático del listener y el UUID usado para idempotencia?
-3. ¿Qué cambio de seguridad harías antes de desplegar RabbitMQ fuera de este laboratorio?
