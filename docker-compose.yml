@@ -26,6 +26,9 @@ services:
     ports:
       - "127.0.0.1:5672:5672"
       - "127.0.0.1:15672:15672"
+      # "localhost" puede resolver a ::1; sin este binding el navegador espera ~2 s y falla
+      - "[::1]:5672:5672"
+      - "[::1]:15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
@@ -108,6 +111,7 @@ services:
     container_name: ms-chat
     ports:
       - "127.0.0.1:8083:8083"
+      - "[::1]:8083:8083"
     environment:
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       DATABASE_HOST: postgres
