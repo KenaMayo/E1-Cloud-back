@@ -1,7 +1,7 @@
 # ARCHITECTURE — Tienda de Perritos Cloud Native
 
 **Asignatura**: DSY1107 – Desarrollo Cloud Native I  
-**Estudiante**: [Tu nombre]  
+**Estudiante**: Anakena Balbontin  
 **Fecha**: 2026-01-09
 
 ---

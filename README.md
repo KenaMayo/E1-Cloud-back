@@ -1,5 +1,7 @@
 # Tienda de Perritos — Cloud Native Migration
 
+Para levantar el chat en tiempo real entre usuarios y administradores con RabbitMQ, consulta la [guía de integración](./CHAT-GUIDE.md).
+
 > ⚠️ **Autenticación Microsoft (MSAL / Azure AD) deshabilitada temporalmente** por fallas en Azure (pendiente soporte de Microsoft).
 > El código MSAL **no fue eliminado**: está comentado y marcado con `[MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft`.
 > Mientras tanto hay un **login básico por base de datos** (usuarios con rol `ADMIN`/`USER`, contraseñas BCrypt, JWT propio firmado con `JWT_SECRET`).

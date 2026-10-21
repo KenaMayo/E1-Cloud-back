@@ -20,6 +20,27 @@ services:
       retries: 5
     restart: unless-stopped
 
+  rabbitmq:
+    image: rabbitmq:4.2-management
+    container_name: tienda-rabbitmq
+    ports:
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    networks:
+      - tienda-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    restart: unless-stopped
+
   ms-productos:
     build:
       context: ./tienda-perritos-ms-productos
@@ -80,6 +101,41 @@ services:
       start_period: 40s
     restart: unless-stopped
 
+  ms-chat:
+    build:
+      context: ./tienda-perritos-ms-chat
+      dockerfile: Dockerfile
+    container_name: ms-chat
+    ports:
+      - "127.0.0.1:8083:8083"
+    environment:
+      JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me-0123456789abcdef}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+      CORS_ALLOWED_ORIGINS: http://localhost,http://localhost:4200,http://127.0.0.1:4200
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - tienda-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO /dev/null http://127.0.0.1:8083/api/v1/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 40s
+    restart: unless-stopped
+
   bff:
     build:
       context: ./tienda-perritos-bff
@@ -121,12 +177,15 @@ services:
     depends_on:
       bff:
         condition: service_healthy
+      ms-chat:
+        condition: service_healthy
     networks:
       - tienda-network
     restart: unless-stopped
 
 volumes:
   postgres_data:
+  rabbitmq_data:
 
 networks:
   tienda-network:
