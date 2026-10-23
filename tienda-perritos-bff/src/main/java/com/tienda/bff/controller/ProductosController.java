@@ -22,7 +22,9 @@ public class ProductosController {
 
     @GetMapping
         public ResponseEntity<List<ProductoDto>> obtenerTodos(
-                        @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
+                        // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+                        // @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
+                        @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorizationHeader) {
         log.info("Obteniendo todos los productos");
 
                 List<ProductoDto> productos = productosClient.obtenerTodosProductos(authorizationHeader)
@@ -35,7 +37,9 @@ public class ProductosController {
     @GetMapping("/{id}")
     public ResponseEntity<ProductoDto> obtenerPorId(
             @PathVariable Long id,
-                        @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
+                        // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+                        // @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
+                        @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorizationHeader) {
         log.info("Obteniendo producto con ID: {}", id);
 
                 return productosClient.obtenerProducto(id, authorizationHeader)
@@ -47,7 +51,9 @@ public class ProductosController {
     @PostMapping
     public ResponseEntity<ProductoDto> crear(
             @RequestBody ProductoDto producto,
-                        @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
+                        // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+                        // @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
+                        @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorizationHeader) {
         log.info("Crear nuevo producto");
 
                 return productosClient.crearProducto(producto, authorizationHeader)
@@ -60,7 +66,9 @@ public class ProductosController {
     public ResponseEntity<ProductoDto> actualizar(
             @PathVariable Long id,
             @RequestBody ProductoDto producto,
-                        @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
+                        // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+                        // @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
+                        @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorizationHeader) {
         log.info("Actualizar producto con ID: {}", id);
 
                 return productosClient.actualizarProducto(id, producto, authorizationHeader)
@@ -72,7 +80,9 @@ public class ProductosController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(
             @PathVariable Long id,
-                        @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
+                        // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+                        // @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
+                        @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorizationHeader) {
         log.info("Eliminar producto con ID: {}", id);
 
                 return productosClient.eliminarProducto(id, authorizationHeader)

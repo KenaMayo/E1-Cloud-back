@@ -9,7 +9,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+// [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+/*
+import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
+*/
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,12 +26,17 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
 
+    // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+    /*
     private String emailDe(Authentication authentication) {
         Jwt jwt = (Jwt) authentication.getPrincipal();
         String email = jwt.getClaimAsString("preferred_username");
         return email != null ? email : jwt.getClaimAsString("email");
     }
+    */
 
+    // [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+    /*
     @GetMapping("/me")
     public ResponseEntity<UsuarioDto> obtenerUsuarioActual(Authentication authentication) {
         log.info("Obteniendo usuario actual");
@@ -63,6 +72,29 @@ public class UsuarioController {
         );
         return ResponseEntity.ok(usuario);
     }
+    */
+
+    // Login por base de datos: la identidad sale del token JWT propio (username).
+    @GetMapping("/me")
+    public ResponseEntity<UsuarioDto> obtenerUsuarioActual(Authentication authentication) {
+        log.info("Obteniendo usuario actual");
+        return ResponseEntity.ok(usuarioService.obtenerPorUsername(authentication.getName()));
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<UsuarioDto> actualizarUsuarioActual(
+            Authentication authentication,
+            @Valid @RequestBody CreateUsuarioRequest request) {
+        log.info("Actualizar usuario actual");
+        UsuarioDto usuarioActual = usuarioService.obtenerPorUsername(authentication.getName());
+        UsuarioDto usuario = usuarioService.actualizar(
+                usuarioActual.getId(),
+                request.getNombre(),
+                request.getApellido(),
+                null
+        );
+        return ResponseEntity.ok(usuario);
+    }
 
     @GetMapping
     public ResponseEntity<List<UsuarioDto>> obtenerTodos() {
@@ -87,13 +119,15 @@ public class UsuarioController {
 
     @PostMapping
     public ResponseEntity<UsuarioDto> crear(@Valid @RequestBody CreateUsuarioRequest request) {
-        log.info("Crear nuevo usuario: {}", request.getEmail());
+        log.info("Crear nuevo usuario");
 
         UsuarioDto usuario = usuarioService.crear(
+                request.getUsername(),
                 request.getEmail(),
                 request.getNombre(),
                 request.getApellido(),
-                request.getRoles()
+                request.getRoles(),
+                request.getPassword()
         );
 
         return ResponseEntity.status(HttpStatus.CREATED).body(usuario);

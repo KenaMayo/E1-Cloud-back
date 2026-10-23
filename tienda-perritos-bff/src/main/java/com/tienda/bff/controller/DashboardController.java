@@ -10,6 +10,65 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
+
+// Versión con login por base de datos (JWT propio); el token se reenvía a ms-usuarios.
+// [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft (versión MSAL al final del archivo)
+@RestController
+@RequestMapping("/dashboard")
+@RequiredArgsConstructor
+@Slf4j
+public class DashboardController {
+
+    private final ProductosClient productosClient;
+    private final UsuariosClient usuariosClient;
+
+    @GetMapping
+    public ResponseEntity<?> obtenerDashboard(Authentication authentication) {
+        log.info("Obteniendo datos del dashboard");
+
+        String token = (String) authentication.getCredentials();
+
+        Mono<UsuarioDto> usuarioMono = usuariosClient.obtenerUsuarioActual(token);
+
+        Mono<Integer> productosCountMono = productosClient.obtenerTodosProductos(null)
+                .collectList()
+                .map(List::size)
+                .onErrorReturn(0);
+
+        // Listar usuarios es solo ADMIN: para otros roles el conteo cae en 0
+        Mono<Long> usuariosCountMono = usuariosClient.obtenerTodosUsuarios(token)
+                .collectList()
+                .map(list -> (long) list.size())
+                .onErrorReturn(0L);
+
+        return Mono.zip(usuarioMono, productosCountMono, usuariosCountMono)
+                .map(tuple -> DashboardDto.builder()
+                        .usuario(tuple.getT1())
+                        .totalProductos(tuple.getT2())
+                        .totalUsuarios(tuple.getT3())
+                        .build())
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build())
+                .block();
+    }
+}
+
+// [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+/*
+package com.tienda.bff.controller;
+
+import com.tienda.bff.client.ProductosClient;
+import com.tienda.bff.client.UsuariosClient;
+import com.tienda.bff.dto.DashboardDto;
+import com.tienda.bff.dto.UsuarioDto;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.util.List;
@@ -53,4 +112,5 @@ public class DashboardController {
                 .block();
     }
 }
+*/
 

@@ -1,0 +1,60 @@
+spring:
+  application:
+    name: ms-chat
+  datasource:
+    url: jdbc:postgresql://${DATABASE_HOST:localhost}:${DATABASE_PORT:5432}/${DATABASE_NAME:tienda_perritos}
+    username: ${DATABASE_USER:postgres}
+    password: ${DATABASE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: ${RABBITMQ_VHOST:/}
+    listener:
+      simple:
+        acknowledge-mode: auto
+        concurrency: 1
+        max-concurrency: 3
+        prefetch: 1
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 1000
+          multiplier: 2.0
+          max-interval: 10000
+        default-requeue-rejected: false
+
+jwt:
+  secret: ${JWT_SECRET}
+
+server:
+  port: 8083
+  servlet:
+    context-path: /api/v1
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost,http://localhost:4200,http://127.0.0.1:4200}
+
+logging:
+  level:
+    root: INFO
+    com.tienda.chat: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never

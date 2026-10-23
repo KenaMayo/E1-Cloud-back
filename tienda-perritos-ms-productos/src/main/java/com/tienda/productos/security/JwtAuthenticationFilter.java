@@ -1,5 +1,7 @@
 package com.tienda.productos.security;
 
+// [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+/*
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -36,3 +38,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 }
+*/

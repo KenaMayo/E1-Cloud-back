@@ -9,6 +9,112 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
+
+// Versión con login por base de datos (JWT propio); el token se reenvía a ms-usuarios.
+// [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft (versión MSAL al final del archivo)
+@RestController
+@RequestMapping("/usuarios")
+@RequiredArgsConstructor
+@Slf4j
+public class UsuariosController {
+
+    private final UsuariosClient usuariosClient;
+
+    private static String token(Authentication authentication) {
+        return (String) authentication.getCredentials();
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UsuarioDto> obtenerUsuarioActual(Authentication authentication) {
+        log.info("Obteniendo usuario actual");
+
+        return usuariosClient.obtenerUsuarioActual(token(authentication))
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build())
+                .block();
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<UsuarioDto> actualizarUsuarioActual(@RequestBody UsuarioDto usuario,
+                                                              Authentication authentication) {
+        log.info("Actualizar usuario actual");
+
+        return usuariosClient.actualizarUsuarioActual(usuario, token(authentication))
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build())
+                .block();
+    }
+
+    @GetMapping
+    public ResponseEntity<List<UsuarioDto>> obtenerTodos(Authentication authentication) {
+        log.info("Obteniendo todos los usuarios");
+
+        List<UsuarioDto> usuarios = usuariosClient.obtenerTodosUsuarios(token(authentication))
+                .collectList()
+                .block();
+
+        return ResponseEntity.ok(usuarios);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<UsuarioDto> obtenerPorId(@PathVariable Long id, Authentication authentication) {
+        log.info("Obteniendo usuario con ID: {}", id);
+
+        return usuariosClient.obtenerUsuario(id, token(authentication))
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build())
+                .block();
+    }
+
+    @PostMapping
+    public ResponseEntity<UsuarioDto> crear(@RequestBody UsuarioDto usuario, Authentication authentication) {
+        log.info("Crear nuevo usuario");
+
+        return usuariosClient.crearUsuario(usuario, token(authentication))
+                .map(u -> ResponseEntity.status(HttpStatus.CREATED).body(u))
+                .defaultIfEmpty(ResponseEntity.badRequest().build())
+                .block();
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<UsuarioDto> actualizar(
+            @PathVariable Long id,
+            @RequestBody UsuarioDto usuario,
+            Authentication authentication) {
+        log.info("Actualizar usuario con ID: {}", id);
+
+        return usuariosClient.actualizarUsuario(id, usuario, token(authentication))
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build())
+                .block();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable Long id, Authentication authentication) {
+        log.info("Eliminar usuario con ID: {}", id);
+
+        return usuariosClient.eliminarUsuario(id, token(authentication))
+                .then(Mono.just(ResponseEntity.noContent().<Void>build()))
+                .defaultIfEmpty(ResponseEntity.notFound().build())
+                .block();
+    }
+}
+
+// [MSAL-DISABLED] motivo: fallas en Azure, pendiente soporte Microsoft
+/*
+package com.tienda.bff.controller;
+
+import com.tienda.bff.client.UsuariosClient;
+import com.tienda.bff.dto.UsuarioDto;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.util.List;
@@ -117,3 +223,4 @@ public class UsuariosController {
                 .block();
     }
 }
+*/
